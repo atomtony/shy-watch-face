@@ -1,6 +1,7 @@
 import Toybox.Application;
 import Toybox.Lang;
 import Toybox.WatchUi;
+import Toybox.System;
 
 class ShyApp extends Application.AppBase {
     private var view;
@@ -15,20 +16,20 @@ class ShyApp extends Application.AppBase {
     }
 
     // onStart() is called on application start up
-    function onStart(state as Dictionary?) as Void {
-    }
+    function onStart(state as Dictionary?) as Void {}
 
     // onStop() is called when your application is exiting
-    function onStop(state as Dictionary?) as Void {
-    }
+    function onStop(state as Dictionary?) as Void {}
 
     // Return the initial view of your application here
     function getInitialView() as Array<Views or InputDelegates>? {
         view = new ShyView();
         onSettingsChanged();
-        return [ view ] as Array<Views or InputDelegates>;
-    }
 
+        var aa = new $.Examl(1, null);
+        aa.name();
+        return [view] as Array<Views or InputDelegates>;
+    }
 }
 
 function getApp() as ShyApp {

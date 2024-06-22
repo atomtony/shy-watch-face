@@ -1,4 +1,4 @@
-using Toybox.Graphics;
+import Toybox.Graphics;
 using Toybox.Lang;
 using Toybox.System;
 using Toybox.WatchUi;
@@ -38,10 +38,12 @@ class ShyView extends WatchUi.WatchFace {
 
         screenWidth = dc.getWidth();
         screenHeight = dc.getHeight();
+        System.println("screenWidth=" + screenWidth);
+        System.println("screenHeight=" + screenHeight);
 
         var heartResource = WatchUi.loadResource(Rez.Drawables.Heart);
         heart = new WatchUi.AnimationLayer(heartResource, {
-            :locX => screenWidth * 3 / 4,
+            :locX => (screenWidth * 3) / 4,
             :locY => (screenHeight - heartResource.getHeight()) / 2 + 2, // Visual adjustment
         });
         addLayer(heart);
@@ -50,13 +52,15 @@ class ShyView extends WatchUi.WatchFace {
     }
 
     function pumpHeart() {
-        heart.play(null);
+        // 动画时常0.125秒
+        heart.play({ :delegate => null });
     }
 
     // Called when this View is brought to the foreground. Restore
     // the state of this View and prepare it to be shown. This includes
     // loading resources into memory.
     function onShow() as Void {
+        System.println("onShow");
         isHidden = false;
     }
 
@@ -77,7 +81,7 @@ class ShyView extends WatchUi.WatchFace {
         if (!isLowPowerMode && !isHidden) {
             pumpHeart();
             if (System.getClockTime().sec % 15 == 0) {
-                blinkingEyes.blink();
+                // blinkingEyes.blink();
             }
         }
     }
@@ -128,7 +132,6 @@ class ShyView extends WatchUi.WatchFace {
         }
 
         var clockTime = System.getClockTime();
-        var minutes = clockTime.min.format("%02d");
         var seconds = clockTime.sec.format("%02d");
 
         var minutesWidth = 48; // dc.getTextWidthInPixels(minutes, minutesFont)
@@ -149,19 +152,17 @@ class ShyView extends WatchUi.WatchFace {
             dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         }
 
-        dc.drawText(
-            x,
-            y,
-            dateFont,
-            seconds,
-            Graphics.TEXT_JUSTIFY_LEFT
-        );
+        dc.drawText(x, y, dateFont, seconds, Graphics.TEXT_JUSTIFY_LEFT);
     }
 
     private function drawDate(dc) {
         var now = Time.now();
         var date = Date.info(now, Time.FORMAT_MEDIUM);
-        var dateString = Lang.format("$1$, $2$ $3$", [date.day_of_week, date.month, date.day]);
+        var dateString = Lang.format("$1$, $2$ $3$", [
+            date.day_of_week,
+            date.month,
+            date.day,
+        ]);
 
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_TRANSPARENT);
         dc.drawText(
@@ -175,30 +176,35 @@ class ShyView extends WatchUi.WatchFace {
 
     private function drawHeartRateText(dc) {
         var heartRate = 0;
-        
+
         var info = Activity.getActivityInfo();
         if (info != null) {
             heartRate = info.currentHeartRate;
         } else {
-            var latestHeartRateSample = ActivityMonitor.getHeartRateHistory(1, true).next();
+            var latestHeartRateSample = ActivityMonitor.getHeartRateHistory(
+                1,
+                true
+            ).next();
             if (latestHeartRateSample != null) {
                 heartRate = latestHeartRateSample.heartRate;
             }
         }
 
         var heartResource = heart.getResource();
-        var x = screenWidth * 3 / 4 + heartResource.getWidth() + 4; // Margin right
+        var x = (screenWidth * 3) / 4 + heartResource.getWidth() + 4; // Margin right
         var y = screenHeight / 2;
 
         dc.setColor(
-            (heartRate != null && heartRate > 120) ? Graphics.COLOR_DK_RED : Graphics.COLOR_WHITE,
+            heartRate != null && heartRate > 120
+                ? Graphics.COLOR_DK_RED
+                : Graphics.COLOR_WHITE,
             Graphics.COLOR_TRANSPARENT
         );
         dc.drawText(
             x,
             y,
             dateFont,
-            (heartRate == 0 || heartRate == null) ? "--" : heartRate.format("%d"),
+            heartRate == 0 || heartRate == null ? "--" : heartRate.format("%d"),
             Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER
         );
     }
@@ -217,27 +223,11 @@ class ShyView extends WatchUi.WatchFace {
             Graphics.COLOR_TRANSPARENT
         );
         // Draw the outer rect
-        dc.drawRoundedRectangle(
-            x,
-            y,
-            width,
-            height,
-            2
-        );
+        dc.drawRoundedRectangle(x, y, width, height, 2);
         // Draw the small + on the right
-        dc.drawLine(
-            x + width + 1,
-            y + 3,
-            x + width + 1,
-            y + height - 3
-        );
+        dc.drawLine(x + width + 1, y + 3, x + width + 1, y + height - 3);
         // Fill the rect based on current battery
-        dc.fillRectangle(
-            x + 1,
-            y,
-            (width - 2) * battery / 100,
-            height
-        );
+        dc.fillRectangle(x + 1, y, ((width - 2) * battery) / 100, height);
 
         // Draw the text
         dc.drawText(
@@ -253,19 +243,21 @@ class ShyView extends WatchUi.WatchFace {
     // state of this View here. This includes freeing resources from
     // memory.
     function onHide() as Void {
+        System.println("onHide");
         isHidden = true;
     }
 
     // The user has just looked at their watch. Timers and animations may be started here.
     function onExitSleep() as Void {
+        System.println("onExitSleep");
         isLowPowerMode = false;
     }
 
     // Terminate any active timers and prepare for slow updates.
     function onEnterSleep() as Void {
+        System.println("onEnterSleep");
         isLowPowerMode = true;
         blinkingEyes.stop();
         heart.stop();
     }
-
 }
